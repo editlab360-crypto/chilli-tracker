@@ -4,8 +4,8 @@ from google import genai
 from datetime import datetime
 
 def send_chilli_updates():
-    # නිවැරදි Gemini API Key එක
-    GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") 
+    # GitHub Secrets වලින් API Key එක ලබා ගනී
+    GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
     TELEGRAM_BOT_TOKEN = "8691990282:AAH47_UaybjVWzdGL6XiE0miiLSWNS9RWzc"
     TELEGRAM_CHAT_ID = "8206066556"
     WEATHER_API_KEY = "e497834b0902926e551f81c94c3b352"
