@@ -1,10 +1,8 @@
 import requests
 import os
-from google import genai
 from datetime import datetime
 
 def send_chilli_updates():
-    # GitHub Secrets වලින් API Key එක ලබා ගනී
     GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
     TELEGRAM_BOT_TOKEN = "8691990282:AAH47_UaybjVWzdGL6XiE0miiLSWNS9RWzc"
     TELEGRAM_CHAT_ID = "8206066556"
@@ -14,10 +12,10 @@ def send_chilli_updates():
     LON = "81.370014"
 
     PLANTED_DATE = datetime(2026, 9, 18) 
-
     today = datetime.now()
     age_in_days = (today - PLANTED_DATE).days
 
+    # Weather Fetching
     weather_info = "කාලගුණ දත්ත ලබාගැනීමට නොහැකි විය."
     try:
         weather_url = f"http://api.openweathermap.org/data/2.5/weather?lat={LAT}&lon={LON}&appid={WEATHER_API_KEY}&units=metric"
@@ -30,7 +28,7 @@ def send_chilli_updates():
     except Exception as e:
         print("Weather API Error:", e)
 
-    user_question = f"""
+    prompt = f"""
 මම නයි මිරිස් ඇට තවන් කරලා තියෙන්නේ Tray වල. 
 අද දිනට තවනට වයස දවස් {age_in_days} යි.
 අපේ වගාබිම පිහිටි ස්ථානයේ අද කාලගුණය: {weather_info}
@@ -44,29 +42,38 @@ def send_chilli_updates():
 කරුණාකර Telegram එකේ කියවන්න ලේසි වෙන විදියට කරුණු (Bullet points) සහ Emojis යොදාගෙන පිළිතුර ලබාදෙන්න.
 """
 
+    ai_answer = ""
+    # Gemini API Direct Call
     try:
-        client = genai.Client(api_key=GEMINI_API_KEY)
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=user_question
-        )
-        ai_answer = response.text
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+        payload = {
+            "contents": [{
+                "parts": [{"text": prompt}]
+            }]
+        }
+        res = requests.post(url, json=payload).json()
+        
+        if 'candidates' in res and len(res['candidates']) > 0:
+            ai_answer = res['candidates'][0]['content']['parts'][0]['text']
+        else:
+            ai_answer = f"Gemini Response Error: {res}"
     except Exception as e:
-        print("Gemini API Error:", e)
-        ai_answer = f"Gemini API Error: {e}"
+        ai_answer = f"Gemini Exception: {e}"
 
-    # Telegram එකට Message එක යැවීම
+    # Send Message to Telegram
     try:
         telegram_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-        payload = {
-            "chat_id": TELEGRAM_CHAT_ID,
-            "text": f"🌶️ නයි මිරිස් වගා උපදෙස් (දවස {age_in_days}) 🌶️\n📍 Location Weather Included\n\n{ai_answer}"
-        }
+        msg_text = f"🌶️ නයි මිරිස් වගා උපදෙස් (දවස {age_in_days}) 🌶️\n📍 Weather: {weather_info}\n\n{ai_answer}"
+        
+        # Telegram character limit safety
+        if len(msg_text) > 4000:
+            msg_text = msg_text[:4000]
 
-        tg_response = requests.post(telegram_url, json=payload)
-        print("Telegram Status Code:", tg_response.status_code)
+        tg_res = requests.post(telegram_url, json={"chat_id": TELEGRAM_CHAT_ID, "text": msg_text})
+        print("Telegram Status Code:", tg_res.status_code)
+        print("Telegram Response:", tg_res.text)
     except Exception as e:
-        print("Telegram Error:", e)
+        print("Telegram Send Error:", e)
 
 if __name__ == "__main__":
     send_chilli_updates()
