@@ -2,7 +2,6 @@ name: Daily Chilli Updates
 
 on:
   schedule:
-    # UTC 01:30 කියන්නේ ශ්‍රී ලංකාවේ වේලාවෙන් උදේ 07:00 ටයි
     - cron: '30 1 * * *'
   workflow_dispatch:
 
@@ -24,4 +23,6 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run Python script
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python main.py
