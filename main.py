@@ -1,9 +1,11 @@
 import requests
+import os
 from google import genai
 from datetime import datetime
 
 def send_chilli_updates():
-    GEMINI_API_KEY = "AIzaSyCmL7i5Sm7tBALBeDz6BjKZBdL95yHb678"
+    # Corrected API Keys and Tokens
+    GEMINI_API_KEY = "AIzaSyCmL7i5Sm7tBALBeDz6BjKZBdL95yHb678"  # ඔබගේ සම්පූර්ණ Gemini API Key එක
     TELEGRAM_BOT_TOKEN = "8691990282:AAH47_UaybjVWzdGL6XiE0miiLSWNS9RWzc"
     TELEGRAM_CHAT_ID = "8206066556"
     WEATHER_API_KEY = "e497834b0902926e551f81c94c3b352"
@@ -26,7 +28,7 @@ def send_chilli_updates():
         humidity = w_res['main']['humidity']
         weather_info = f"උෂ්ණත්වය: {temp}°C, වාතාවරණය: {desc}, ආර්ද්‍රතාවය: {humidity}%"
     except Exception as e:
-        print("Weather API අවුලක්:", e)
+        print("Weather API Error:", e)
 
     user_question = f"""
 මම නයි මිරිස් ඇට තවන් කරලා තියෙන්නේ Tray වල. 
@@ -42,32 +44,30 @@ def send_chilli_updates():
 කරුණාකර Telegram එකේ කියවන්න ලේසි වෙන විදියට කරුණු (Bullet points) සහ Emojis යොදාගෙන පිළිතුර ලබාදෙන්න.
 """
 
-    client = genai.Client(api_key=GEMINI_API_KEY)
-
     try:
+        client = genai.Client(api_key=GEMINI_API_KEY)
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=user_question
         )
-        
         ai_answer = response.text
+    except Exception as e:
+        print("Gemini API Error:", e)
+        ai_answer = "Gemini API මගින් උපදෙස් ලබා ගැනීමට නොහැකි විය."
 
+    # Send message to Telegram
+    try:
         telegram_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         payload = {
             "chat_id": TELEGRAM_CHAT_ID,
-            "text": f"🌶️ *නයි මිරිස් වගා උපදෙස් (දවස {age_in_days})* 🌶️\n📍 Location Weather Included\n\n{ai_answer}",
-            "parse_mode": "Markdown"
+            "text": f"🌶️ නයි මිරිස් වගා උපදෙස් (දවස {age_in_days}) 🌶️\n📍 Location Weather Included\n\n{ai_answer}"
         }
 
         tg_response = requests.post(telegram_url, json=payload)
-
-        if tg_response.status_code == 200:
-            print("Message sent successfully!")
-        else:
-            print("Telegram Error:", tg_response.text)
-
+        print("Telegram Status Code:", tg_response.status_code)
+        print("Telegram Response:", tg_response.text)
     except Exception as e:
-        print("Error:", e)
+        print("Telegram Error:", e)
 
 if __name__ == "__main__":
     send_chilli_updates()
