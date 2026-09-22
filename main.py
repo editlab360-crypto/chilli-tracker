@@ -4,8 +4,8 @@ from google import genai
 from datetime import datetime
 
 def send_chilli_updates():
-    # Corrected API Keys and Tokens
-    GEMINI_API_KEY = "AIzaSyCmL7i5Sm7tBALBeDz6BjKZBdL95yHb678"  # ඔබගේ සම්පූර්ණ Gemini API Key එක
+    # නිවැරදි Gemini API Key එක
+    GEMINI_API_KEY = "AQ.Ab8RN6KHckl5HbcM9soML4K4LmG9KNtcD2_mn0DfpC7kBeSKeQ" 
     TELEGRAM_BOT_TOKEN = "8691990282:AAH47_UaybjVWzdGL6XiE0miiLSWNS9RWzc"
     TELEGRAM_CHAT_ID = "8206066556"
     WEATHER_API_KEY = "e497834b0902926e551f81c94c3b352"
@@ -53,9 +53,9 @@ def send_chilli_updates():
         ai_answer = response.text
     except Exception as e:
         print("Gemini API Error:", e)
-        ai_answer = "Gemini API මගින් උපදෙස් ලබා ගැනීමට නොහැකි විය."
+        ai_answer = f"Gemini API Error: {e}"
 
-    # Send message to Telegram
+    # Telegram එකට Message එක යැවීම
     try:
         telegram_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         payload = {
@@ -65,7 +65,6 @@ def send_chilli_updates():
 
         tg_response = requests.post(telegram_url, json=payload)
         print("Telegram Status Code:", tg_response.status_code)
-        print("Telegram Response:", tg_response.text)
     except Exception as e:
         print("Telegram Error:", e)
 
